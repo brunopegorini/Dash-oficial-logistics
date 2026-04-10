@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Logistics Dashboard</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, sans-serif; background: #f0f2f5; }
+.nav { background: #1e293b; padding: 14px 24px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; position: sticky; top: 0; z-index: 100; }
+.nav-title { color: #fff; font-size: 15px; font-weight: 700; margin-right: 8px; }
+.farm-btn { padding: 7px 16px; border-radius: 6px; border: 1.5px solid #475569; background: transparent; color: #94a3b8; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; white-space: nowrap; }
+.farm-btn:hover { border-color: #94a3b8; color: #e2e8f0; }
+.farm-btn.active { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+.nav-date { margin-left: auto; color: #64748b; font-size: 11px; }
+.farm-panel { display: none; padding: 20px; }
+.farm-panel.visible { display: block; }
+.section-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+.sec-btn { padding: 6px 16px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; color: #475569; font-size: 11px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: .4px; }
+.sec-btn.active { background: #1e293b; color: #fff; border-color: #1e293b; }
+.section { display: none; }
+.section.visible { display: block; }
+.card { background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,0.08); }
+.hdr { background: #1e293b; color: #fff; padding: 11px 16px; display: flex; justify-content: space-between; align-items: center; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.hdr-title { font-size: 14px; font-weight: 700; }
+.hdr-ref { font-size: 11px; color: #94a3b8; }
+.hdr-tag { font-size: 10px; font-weight: 700; background: #334155; color: #94a3b8; padding: 2px 7px; border-radius: 4px; margin-left: 8px; text-transform: uppercase; }
+.metrics { display: grid; grid-template-columns: repeat(4,1fr); border-bottom: 1px solid #e2e8f0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.metric { padding: 10px 16px; border-right: 1px solid #e2e8f0; background: #fff; }
+.metric:last-child { border-right: none; }
+.mlabel { font-size: 10px; color: #6b7280; margin-bottom: 2px; text-transform: uppercase; letter-spacing: .4px; }
+.mval { font-size: 20px; font-weight: 800; }
+.blue{color:#3b82f6} .green{color:#10b981} .amber{color:#f59e0b} .red{color:#ef4444} .gray{color:#6b7280}
+table { width: 100%; border-collapse: collapse; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+th { padding: 7px 9px; text-align: center; font-size: 10px; font-weight: 700; color: #475569; border-bottom: 1px solid #e2e8f0; white-space: nowrap; text-transform: uppercase; letter-spacing: .3px; background: #f8fafc; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+th:first-child { text-align: left; }
+td { padding: 6px 9px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; text-align: center; font-size: 10px; color: #374151; }
+td:first-child { text-align: left; }
+.r0{background:#fff} .r1{background:#f8fafc}
+.badge { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 700; white-space: nowrap; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.done{background:#d1fae5 !important;color:#065f46 !important}
+.inp{background:#fef3c7 !important;color:#92400e !important}
+.tbd{background:#fee2e2 !important;color:#991b1b !important}
+.prog-wrap{font-size:10px;color:#374151;white-space:nowrap}
+.prog-pct{font-size:10px;color:#6b7280;margin-left:3px}
+.prog-track{height:6px;background:#e5e7eb;border-radius:3px;margin-top:3px;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.prog-track-sm{height:4px;background:#e5e7eb;border-radius:2px;margin-top:3px;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.prog-fill{height:6px;border-radius:3px;display:block;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.prog-fill-sm{height:4px;border-radius:2px;display:block;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.pg{background:#10b981 !important} .pa{background:#f59e0b !important} .pr{background:#ef4444 !important}
+.ds-name{font-weight:700;color:#1e293b;font-size:11px}
+.ds-code{font-size:10px;color:#6b7280;display:block;margin-top:1px}
+.total-slim td{background:#1e293b !important;color:#fff !important;font-weight:700;font-size:11px;padding:9px 12px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.total-slim .tg{color:#6ee7b7 !important} .total-slim .ta{color:#fcd34d !important}
+.ds-row td{background:#f1f5f9 !important;font-weight:700;font-size:11px;color:#334155;border-top:2px solid #cbd5e1;border-bottom:1px solid #e2e8f0;padding:7px 9px;text-align:left;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.fname{font-weight:600;color:#1e293b;font-size:10px}
+.total-full td{background:#f1f5f9 !important;font-weight:700;font-size:11px;border-top:2px solid #cbd5e1;padding:7px 9px}
+.footer{font-size:10px;color:#94a3b8;text-align:right;padding:6px 14px 8px;background:#f8fafc;border-top:1px solid #f1f5f9}
+.sort-note{font-size:10px;color:#6b7280;padding:5px 12px;background:#f8fafc;border-bottom:1px solid #e2e8f0;font-style:italic}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <span class="nav-title">🚜 Logistics Dashboard</span>
+  <button class="farm-btn active" onclick="showFarm('rancho')">Rancho Dagua</button>
+  <button class="farm-btn" onclick="showFarm('guaranta')">Guarantã</button>
+  <button class="farm-btn" onclick="showFarm('viwan')">Viwan</button>
+  <button class="farm-btn" onclick="showFarm('agroterenas')">Agroterenas</button>
+  <span class="nav-date">Updated: 10/04/2026</span>
+</div>
+
+<!-- ═══════════════════════ RANCHO DAGUA ═══════════════════════ -->
+<div class="farm-panel visible" id="farm-rancho">
+  <div class="section-tabs">
+    <button class="sec-btn active" onclick="showSection('rancho','ov')">Overview</button>
+    <button class="sec-btn" onclick="showSection('rancho','dt')">Field Detail</button>
+  </div>
+  <div class="section visible" id="rancho-ov">
+    <div class="card">
+      <div class="hdr"><span class="hdr-title">Rancho Dagua — Quarry: Conquista <span class="hdr-tag">Overview</span></span><span class="hdr-ref">Ref: Mar/2025</span></div>
+      <div class="metrics">
+        <div class="metric"><div class="mlabel">Total area</div><div class="mval blue">142 ha</div></div>
+        <div class="metric"><div class="mlabel">Required volume</div><div class="mval blue">3,905 t</div></div>
+        <div class="metric"><div class="mlabel">Loaded volume</div><div class="mval green">3,905 t</div></div>
+        <div class="metric"><div class="mlabel">Remaining</div><div class="mval green">0 t</div></div>
+      </div>
+      <div class="sort-note">Sorted by Freight end date (ascending)</div>
+      <table><thead><tr>
+        <th style="width:18%">Dropsite</th><th style="width:22%">Loaded / Required (t)</th><th style="width:9%">Remaining</th>
+        <th style="width:9%">Freight start</th><th style="width:9%">Freight end</th><th style="width:10%">Status</th>
+        <th style="width:8%">Spr. start</th><th style="width:8%">Spr. end</th><th style="width:10%">Status</th>
+      </tr></thead><tbody>
+        <tr class="r0"><td><span class="ds-name">DS 1</span><span class="ds-code">f307_p1</span></td><td><div class="prog-wrap">265/265<span class="prog-pct">(100%)</span><div class="prog-track"><span class="prog-fill pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>03/Mar</td><td>04/Mar</td><td><span class="badge done">Done</span></td><td>10/Mar</td><td>11/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="r1"><td><span class="ds-name">DS 2</span><span class="ds-code">f300_p1</span></td><td><div class="prog-wrap">1,350/1,350<span class="prog-pct">(100%)</span><div class="prog-track"><span class="prog-fill pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>03/Mar</td><td>13/Mar</td><td><span class="badge done">Done</span></td><td>11/Mar</td><td>13/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="r0"><td><span class="ds-name">DS 3</span><span class="ds-code">fa45_p1</span></td><td><div class="prog-wrap">670/670<span class="prog-pct">(100%)</span><div class="prog-track"><span class="prog-fill pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>13/Mar</td><td>19/Mar</td><td><span class="badge done">Done</span></td><td>28/Mar</td><td>31/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="r1"><td><span class="ds-name">DS 5</span><span class="ds-code">f318_p1</span></td><td><div class="prog-wrap">851/851<span class="prog-pct">(100%)</span><div class="prog-track"><span class="prog-fill pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>14/Mar</td><td>26/Mar</td><td><span class="badge done">Done</span></td><td>27/Mar</td><td>28/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="r0"><td><span class="ds-name">DS 4</span><span class="ds-code">f310_p2</span></td><td><div class="prog-wrap">770/770<span class="prog-pct">(100%)</span><div class="prog-track"><span class="prog-fill pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>26/Mar</td><td>28/Mar</td><td><span class="badge done">Done</span></td><td>28/Mar</td><td>29/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="total-slim"><td style="text-align:left;">Overall total</td><td class="tg">3,905/3,905 t (100%)</td><td class="tg">0 t</td><td colspan="6"></td></tr>
+      </tbody></table>
+      <div class="footer">10/04/2026 · Overview</div>
+    </div>
+  </div>
+  <div class="section" id="rancho-dt">
+    <div class="card">
+      <div class="hdr"><span class="hdr-title">Rancho Dagua — Quarry: Conquista <span class="hdr-tag">Field Detail</span></span><span class="hdr-ref">Ref: Mar/2025</span></div>
+      <div class="metrics">
+        <div class="metric"><div class="mlabel">Total area</div><div class="mval blue">142 ha</div></div>
+        <div class="metric"><div class="mlabel">Required volume</div><div class="mval blue">3,905 t</div></div>
+        <div class="metric"><div class="mlabel">Loaded volume</div><div class="mval green">3,905 t</div></div>
+        <div class="metric"><div class="mlabel">Remaining</div><div class="mval green">0 t</div></div>
+      </div>
+      <div class="sort-note">Sorted by Freight end date (ascending)</div>
+      <table><thead><tr>
+        <th style="width:20%">Field</th><th style="width:6%">Area</th><th style="width:14%">Loaded / Req. (t)</th>
+        <th style="width:7%">Req. (t)</th><th style="width:8%">Fr. start</th><th style="width:8%">Fr. end</th>
+        <th style="width:8%">Status</th><th style="width:7%">Planting</th><th style="width:8%">Spr. start</th><th style="width:8%">Spr. end</th><th style="width:8%">Status</th>
+      </tr></thead><tbody>
+        <tr class="ds-row"><td colspan="11">DS 1 — f307_p1 · 04/Mar &nbsp;<span style="font-weight:400;color:#10b981;">265/265 t · 100% · Done · Done</span></td></tr>
+        <tr class="r0"><td class="fname">Baiano lado irrigação</td><td>7.16</td><td><div class="prog-wrap">197/197<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>03/Mar</td><td>04/Mar</td><td><span class="badge done">Done</span></td><td>pasto</td><td>10/Mar</td><td>11/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="r1"><td class="fname">Irrigação</td><td>2.46</td><td><div class="prog-wrap">68/68<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>03/Mar</td><td>04/Mar</td><td><span class="badge done">Done</span></td><td>pasto</td><td>10/Mar</td><td>11/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 2 — f300_p1 · 13/Mar &nbsp;<span style="font-weight:400;color:#10b981;">1,350/1,350 t · 100% · Done · Done</span></td></tr>
+        <tr class="r0"><td class="fname">fundo_cemiterio</td><td>27.66</td><td><div class="prog-wrap">761/761<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>03/Mar</td><td>13/Mar</td><td><span class="badge done">Done</span></td><td>pasto</td><td>11/Mar</td><td>13/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="r1"><td class="fname">Buracão</td><td>21.43</td><td><div class="prog-wrap">590/590<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>03/Mar</td><td>13/Mar</td><td><span class="badge done">Done</span></td><td>pasto</td><td>11/Mar</td><td>13/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 3 — fa45_p1 · 19/Mar &nbsp;<span style="font-weight:400;color:#10b981;">670/670 t · 100% · Done · Done</span></td></tr>
+        <tr class="r0"><td class="fname">casa_do_vaguinho</td><td>3.92</td><td><div class="prog-wrap">108/108<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>13/Mar</td><td>19/Mar</td><td><span class="badge done">Done</span></td><td>pasto</td><td>28/Mar</td><td>31/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="r1"><td class="fname">fundo_confinamento</td><td>2.44</td><td><div class="prog-wrap">68/68<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>13/Mar</td><td>19/Mar</td><td><span class="badge done">Done</span></td><td>pasto</td><td>28/Mar</td><td>31/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="r0"><td class="fname">fundo_conf_lado_baia</td><td>5.12</td><td><div class="prog-wrap">141/141<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>13/Mar</td><td>19/Mar</td><td><span class="badge done">Done</span></td><td>pasto</td><td>28/Mar</td><td>31/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="r1"><td class="fname">fundo_da_baia</td><td>0.72</td><td><div class="prog-wrap">20/20<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>13/Mar</td><td>19/Mar</td><td><span class="badge done">Done</span></td><td>pasto</td><td>28/Mar</td><td>31/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="r0"><td class="fname">fundo_da_horta</td><td>2.54</td><td><div class="prog-wrap">70/70<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>13/Mar</td><td>19/Mar</td><td><span class="badge done">Done</span></td><td>pasto</td><td>28/Mar</td><td>31/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="r1"><td class="fname">piquete_maternidade</td><td>1.22</td><td><div class="prog-wrap">34/34<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>13/Mar</td><td>19/Mar</td><td><span class="badge done">Done</span></td><td>pasto</td><td>28/Mar</td><td>31/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="r0"><td class="fname">fundo_da_tropa</td><td>0.85</td><td><div class="prog-wrap">24/24<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>13/Mar</td><td>19/Mar</td><td><span class="badge done">Done</span></td><td>pasto</td><td>28/Mar</td><td>31/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="r1"><td class="fname">mulatinho</td><td>2.28</td><td><div class="prog-wrap">63/63<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>13/Mar</td><td>19/Mar</td><td><span class="badge done">Done</span></td><td>pasto</td><td>28/Mar</td><td>31/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="r0"><td class="fname">paredao_pasto_2</td><td>2.89</td><td><div class="prog-wrap">80/80<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>13/Mar</td><td>19/Mar</td><td><span class="badge done">Done</span></td><td>pasto</td><td>28/Mar</td><td>31/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="r1"><td class="fname">pasto_da_tropa</td><td>1.43</td><td><div class="prog-wrap">40/40<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>13/Mar</td><td>19/Mar</td><td><span class="badge done">Done</span></td><td>pasto</td><td>28/Mar</td><td>31/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="r0"><td class="fname">piquete_das_leiteiras</td><td>0.94</td><td><div class="prog-wrap">26/26<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>13/Mar</td><td>19/Mar</td><td><span class="badge done">Done</span></td><td>pasto</td><td>28/Mar</td><td>31/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 5 — f318_p1 · 26/Mar &nbsp;<span style="font-weight:400;color:#10b981;">851/851 t · 100% · Done · Done</span></td></tr>
+        <tr class="r0"><td class="fname">pasto_3_4_alto</td><td>30.93</td><td><div class="prog-wrap">851/851<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>14/Mar</td><td>26/Mar</td><td><span class="badge done">Done</span></td><td>pasto</td><td>27/Mar</td><td>28/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 4 — f310_p2 · 28/Mar &nbsp;<span style="font-weight:400;color:#10b981;">770/770 t · 100% · Done · Done</span></td></tr>
+        <tr class="r0"><td class="fname">lebrao</td><td>0.51</td><td><div class="prog-wrap">770/770<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>26/Mar</td><td>28/Mar</td><td><span class="badge done">Done</span></td><td>pasto</td><td>28/Mar</td><td>29/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="r1"><td class="fname">mix</td><td>27.49</td><td><div class="prog-wrap">770/770<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>26/Mar</td><td>28/Mar</td><td><span class="badge done">Done</span></td><td>pasto</td><td>28/Mar</td><td>29/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="total-full"><td colspan="2" style="text-align:left;">Overall total</td><td>3,905/3,905 t</td><td colspan="8" class="green">All complete ✅</td></tr>
+      </tbody></table>
+      <div class="footer">10/04/2026 · Field Detail</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ GUARANTÃ ═══════════════════════ -->
+<div class="farm-panel" id="farm-guaranta">
+  <div class="section-tabs">
+    <button class="sec-btn active" onclick="showSection('guaranta','ov')">Overview</button>
+    <button class="sec-btn" onclick="showSection('guaranta','dt')">Field Detail</button>
+  </div>
+  <div class="section visible" id="guaranta-ov">
+    <div class="card">
+      <div class="hdr"><span class="hdr-title">Guarantã — Quarry: Paraguaçu <span class="hdr-tag">Overview</span></span><span class="hdr-ref">Ref: Mar-Apr/2025</span></div>
+      <div class="metrics">
+        <div class="metric"><div class="mlabel">Total area</div><div class="mval blue">—</div></div>
+        <div class="metric"><div class="mlabel">Required volume</div><div class="mval blue">13,006 t</div></div>
+        <div class="metric"><div class="mlabel">Loaded volume</div><div class="mval green">13,006 t</div></div>
+        <div class="metric"><div class="mlabel">Remaining</div><div class="mval green">0 t</div></div>
+      </div>
+      <div class="sort-note">Sorted by Freight end date (ascending)</div>
+      <table><thead><tr>
+        <th style="width:18%">Dropsite</th><th style="width:22%">Loaded / Required (t)</th><th style="width:9%">Remaining</th>
+        <th style="width:9%">Freight start</th><th style="width:9%">Freight end</th><th style="width:10%">Status</th>
+        <th style="width:8%">Spr. start</th><th style="width:8%">Spr. end</th><th style="width:10%">Status</th>
+      </tr></thead><tbody>
+        <tr class="r0"><td><span class="ds-name">DS 6</span><span class="ds-code">fa22_p1</span></td><td><div class="prog-wrap">1,705/1,705<span class="prog-pct">(100%)</span><div class="prog-track"><span class="prog-fill pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>03/Mar</td><td>17/Mar</td><td><span class="badge done">Done</span></td><td>25/Mar</td><td>27/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="r1"><td><span class="ds-name">DS 7</span><span class="ds-code">fa22_p3</span></td><td><div class="prog-wrap">1,785/1,785<span class="prog-pct">(100%)</span><div class="prog-track"><span class="prog-fill pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>17/Mar</td><td>30/Mar</td><td><span class="badge done">Done</span></td><td>30/Mar</td><td>31/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="r0"><td><span class="ds-name">DS 1</span><span class="ds-code">f358_p1</span></td><td><div class="prog-wrap">7,053/7,053<span class="prog-pct">(100%)</span><div class="prog-track"><span class="prog-fill pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>13/Fev</td><td>10/Abr</td><td><span class="badge done">Done</span></td><td>10/Abr</td><td>15/Abr</td><td><span class="badge inp">In progress</span></td></tr>
+        <tr class="r1"><td><span class="ds-name">DS 2</span><span class="ds-code">f215_p1</span></td><td><div class="prog-wrap">1,222/1,222<span class="prog-pct">(100%)</span><div class="prog-track"><span class="prog-fill pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>30/Mar</td><td>02/Abr</td><td><span class="badge done">Done</span></td><td>16/Abr</td><td>17/Abr</td><td><span class="badge inp">In progress</span></td></tr>
+        <tr class="r0"><td><span class="ds-name">DS 3</span><span class="ds-code">fa22_p4</span></td><td><div class="prog-wrap">151/151<span class="prog-pct">(100%)</span><div class="prog-track"><span class="prog-fill pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>02/Abr</td><td>02/Abr</td><td><span class="badge done">Done</span></td><td>20/Abr</td><td>20/Abr</td><td><span class="badge inp">In progress</span></td></tr>
+        <tr class="r1"><td><span class="ds-name">DS 4</span><span class="ds-code">fa22_p2</span></td><td><div class="prog-wrap">729/729<span class="prog-pct">(100%)</span><div class="prog-track"><span class="prog-fill pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>06/Abr</td><td>07/Abr</td><td><span class="badge done">Done</span></td><td>20/Abr</td><td>21/Abr</td><td><span class="badge inp">In progress</span></td></tr>
+        <tr class="r0"><td><span class="ds-name">DS 5</span><span class="ds-code">f415_p1</span></td><td><div class="prog-wrap">341/341<span class="prog-pct">(100%)</span><div class="prog-track"><span class="prog-fill pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>07/Abr</td><td>09/Abr</td><td><span class="badge done">Done</span></td><td>21/Abr</td><td>21/Abr</td><td><span class="badge inp">In progress</span></td></tr>
+        <tr class="total-slim"><td style="text-align:left;">Overall total</td><td class="tg">13,006/13,006 t (100%)</td><td class="tg">0 t</td><td colspan="6"></td></tr>
+      </tbody></table>
+      <div class="footer">10/04/2026 · Overview</div>
+    </div>
+  </div>
+  <div class="section" id="guaranta-dt">
+    <div class="card">
+      <div class="hdr"><span class="hdr-title">Guarantã — Quarry: Paraguaçu <span class="hdr-tag">Field Detail</span></span><span class="hdr-ref">Ref: Mar-Apr/2025</span></div>
+      <div class="metrics">
+        <div class="metric"><div class="mlabel">Total area</div><div class="mval blue">—</div></div>
+        <div class="metric"><div class="mlabel">Required volume</div><div class="mval blue">13,006 t</div></div>
+        <div class="metric"><div class="mlabel">Loaded volume</div><div class="mval green">13,006 t</div></div>
+        <div class="metric"><div class="mlabel">Remaining</div><div class="mval green">0 t</div></div>
+      </div>
+      <div class="sort-note">Sorted by Freight end date (ascending)</div>
+      <table><thead><tr>
+        <th style="width:20%">Field</th><th style="width:6%">Area</th><th style="width:14%">Loaded / Req. (t)</th>
+        <th style="width:7%">Req. (t)</th><th style="width:8%">Fr. start</th><th style="width:8%">Fr. end</th>
+        <th style="width:8%">Status</th><th style="width:7%">Planting</th><th style="width:8%">Spr. start</th><th style="width:8%">Spr. end</th><th style="width:8%">Status</th>
+      </tr></thead><tbody>
+        <tr class="ds-row"><td colspan="11">DS 6 — fa22_p1 · 17/Mar &nbsp;<span style="font-weight:400;color:#10b981;">1,705/1,705 t · 100% · Done · Done</span></td></tr>
+        <tr class="r0"><td class="fname">Sequeiro Pivo 8</td><td>62</td><td><div class="prog-wrap">1,705/1,705<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>03/Mar</td><td>17/Mar</td><td><span class="badge done">Done</span></td><td>Pasture</td><td>25/Mar</td><td>27/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 7 — fa22_p3 · 30/Mar &nbsp;<span style="font-weight:400;color:#10b981;">1,785/1,785 t · 100% · Done · Done</span></td></tr>
+        <tr class="r0"><td class="fname">Sequeiro Pivo 8</td><td>64.9</td><td><div class="prog-wrap">1,785/1,785<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>17/Mar</td><td>30/Mar</td><td><span class="badge done">Done</span></td><td>Pasture</td><td>30/Mar</td><td>31/Mar</td><td><span class="badge done">Done</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 2 — f215_p1 · 02/Abr &nbsp;<span style="font-weight:400;color:#10b981;">1,222/1,222 t · 100% · Done</span> &nbsp;<span style="font-weight:400;color:#f59e0b;">Spreading: In progress</span></td></tr>
+        <tr class="r0"><td class="fname">Sequeiro Pivo 2 e 3</td><td>38.81</td><td><div class="prog-wrap">1,067/1,067<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>30/Mar</td><td>02/Abr</td><td><span class="badge done">Done</span></td><td>Pasture</td><td>16/Abr</td><td>17/Abr</td><td><span class="badge inp">In progress</span></td></tr>
+        <tr class="r1"><td class="fname">Sequeiro Pivo 4</td><td>5.62</td><td><div class="prog-wrap">155/155<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>30/Mar</td><td>02/Abr</td><td><span class="badge done">Done</span></td><td>Pasture</td><td>16/Abr</td><td>17/Abr</td><td><span class="badge inp">In progress</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 3 — fa22_p4 · 02/Abr &nbsp;<span style="font-weight:400;color:#10b981;">151/151 t · 100% · Done</span> &nbsp;<span style="font-weight:400;color:#f59e0b;">Spreading: In progress</span></td></tr>
+        <tr class="r0"><td class="fname">Sequeiro Pivo 2 e 3</td><td>5.5</td><td><div class="prog-wrap">151/151<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>02/Abr</td><td>02/Abr</td><td><span class="badge done">Done</span></td><td>Pasture</td><td>20/Abr</td><td>20/Abr</td><td><span class="badge inp">In progress</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 4 — fa22_p2 · 07/Abr &nbsp;<span style="font-weight:400;color:#10b981;">729/729 t · 100% · Done</span> &nbsp;<span style="font-weight:400;color:#f59e0b;">Spreading: In progress</span></td></tr>
+        <tr class="r0"><td class="fname">Sequeiro Pivo 6</td><td>4.2</td><td><div class="prog-wrap">116/116<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>02/Abr</td><td>04/Abr</td><td><span class="badge done">Done</span></td><td>Pasture</td><td>20/Abr</td><td>20/Abr</td><td><span class="badge inp">In progress</span></td></tr>
+        <tr class="r1"><td class="fname">Sequeiro 2 Pivo 7</td><td>19.41</td><td><div class="prog-wrap">534/534<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>06/Abr</td><td>06/Abr</td><td><span class="badge done">Done</span></td><td>Pasture</td><td>20/Abr</td><td>21/Abr</td><td><span class="badge inp">In progress</span></td></tr>
+        <tr class="r0"><td class="fname">Sequeiro 1 Pivo 7</td><td>2.9</td><td><div class="prog-wrap">80/80<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>06/Abr</td><td>07/Abr</td><td><span class="badge done">Done</span></td><td>Pasture</td><td>20/Abr</td><td>21/Abr</td><td><span class="badge inp">In progress</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 5 — f415_p1 · 09/Abr &nbsp;<span style="font-weight:400;color:#10b981;">341/341 t · 100% · Done</span> &nbsp;<span style="font-weight:400;color:#f59e0b;">Spreading: In progress</span></td></tr>
+        <tr class="r0"><td class="fname">Sequeiro 1 Pivo 7</td><td>12.41</td><td><div class="prog-wrap">341/341<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>07/Abr</td><td>09/Abr</td><td><span class="badge done">Done</span></td><td>Pasture</td><td>21/Abr</td><td>21/Abr</td><td><span class="badge inp">In progress</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 1 — f358_p1 · 10/Abr &nbsp;<span style="font-weight:400;color:#10b981;">7,053/7,053 t · 100% · Done</span> &nbsp;<span style="font-weight:400;color:#f59e0b;">Spreading: In progress</span></td></tr>
+        <tr class="r0"><td class="fname">Entrada</td><td>—</td><td><div class="prog-wrap">3,328/3,328<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>13/Fev</td><td>25/Fev</td><td><span class="badge done">Done</span></td><td>Pasture</td><td>10/Abr</td><td>11/Abr</td><td><span class="badge inp">In progress</span></td></tr>
+        <tr class="r1"><td class="fname">Seq. Pivô 1</td><td>257.18</td><td><div class="prog-wrap">932/932<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>25/Fev</td><td>28/Fev</td><td><span class="badge done">Done</span></td><td>Pasture</td><td>10/Abr</td><td>11/Abr</td><td><span class="badge inp">In progress</span></td></tr>
+        <tr class="r0"><td class="fname">Seq. Pivô 5</td><td>—</td><td><div class="prog-wrap">2,812/2,795<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>25/Mar</td><td>10/Abr</td><td><span class="badge done">Done</span></td><td>Pasture</td><td>10/Abr</td><td>15/Abr</td><td><span class="badge inp">In progress</span></td></tr>
+        <tr class="total-full"><td colspan="2" style="text-align:left;">Overall total</td><td>13,006/13,006 t</td><td colspan="8" class="green">Freight all complete ✅ · Spreading in progress</td></tr>
+      </tbody></table>
+      <div class="footer">10/04/2026 · Field Detail</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ VIWAN ═══════════════════════ -->
+<div class="farm-panel" id="farm-viwan">
+  <div class="section-tabs">
+    <button class="sec-btn active" onclick="showSection('viwan','ov')">Overview</button>
+    <button class="sec-btn" onclick="showSection('viwan','dt')">Field Detail</button>
+  </div>
+  <div class="section visible" id="viwan-ov">
+    <div class="card">
+      <div class="hdr"><span class="hdr-title">Viwan — Quarry: Siqueira / Conquista <span class="hdr-tag">Overview</span></span><span class="hdr-ref">Ref: Mar-Apr/2025</span></div>
+      <div class="metrics">
+        <div class="metric"><div class="mlabel">Total area</div><div class="mval blue">—</div></div>
+        <div class="metric"><div class="mlabel">Required volume</div><div class="mval blue">24,545 t</div></div>
+        <div class="metric"><div class="mlabel">Loaded volume</div><div class="mval amber">5,621 t</div></div>
+        <div class="metric"><div class="mlabel">Remaining</div><div class="mval red">18,924 t</div></div>
+      </div>
+      <div class="sort-note">Sorted by Freight end date (ascending) — To be defined shown last</div>
+      <table><thead><tr>
+        <th style="width:18%">Dropsite</th><th style="width:22%">Loaded / Required (t)</th><th style="width:9%">Remaining</th>
+        <th style="width:9%">Freight start</th><th style="width:9%">Freight end</th><th style="width:10%">Status</th>
+        <th style="width:8%">Spr. start</th><th style="width:8%">Spr. end</th><th style="width:10%">Status</th>
+      </tr></thead><tbody>
+        <tr class="r0"><td><span class="ds-name">DS 1</span><span class="ds-code">f426_p1</span></td><td><div class="prog-wrap">1,404/1,424<span class="prog-pct">(99%)</span><div class="prog-track"><span class="prog-fill pg" style="width:99%"></span></div></div></td><td class="gray">0</td><td>23/Mar</td><td>24/Mar</td><td><span class="badge done">Done</span></td><td>28/Mar</td><td>—</td><td><span class="badge inp">In progress</span></td></tr>
+        <tr class="r1"><td><span class="ds-name">DS 2</span><span class="ds-code">f426_p2</span></td><td><div class="prog-wrap">1,404/1,424<span class="prog-pct">(99%)</span><div class="prog-track"><span class="prog-fill pg" style="width:99%"></span></div></div></td><td class="gray">0</td><td>23/Mar</td><td>26/Mar</td><td><span class="badge done">Done</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r0"><td><span class="ds-name">DS 3</span><span class="ds-code">f426_p3</span></td><td><div class="prog-wrap">1,396/1,424<span class="prog-pct">(98%)</span><div class="prog-track"><span class="prog-fill pg" style="width:98%"></span></div></div></td><td class="gray">0</td><td>26/Mar</td><td>27/Mar</td><td><span class="badge done">Done</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r1"><td><span class="ds-name">DS 4</span><span class="ds-code">f426_p4</span></td><td><div class="prog-wrap">1,417/1,424<span class="prog-pct">(100%)</span><div class="prog-track"><span class="prog-fill pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>27/Mar</td><td>30/Mar</td><td><span class="badge done">Done</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r0"><td><span class="ds-name">DS 5</span><span class="ds-code">fa52_p1</span></td><td><div class="prog-wrap">55/782<span class="prog-pct">(7%)</span><div class="prog-track"><span class="prog-fill pr" style="width:7%"></span></div></div></td><td class="red">727</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r1"><td><span class="ds-name">DS 6</span><span class="ds-code">fa52_p2</span></td><td><div class="prog-wrap">0/7,689<span class="prog-pct">(0%)</span><div class="prog-track"><span class="prog-fill pr" style="width:1%"></span></div></div></td><td class="red">7,689</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r0"><td><span class="ds-name">DS 7</span><span class="ds-code">fa52_p3</span></td><td><div class="prog-wrap">0/782<span class="prog-pct">(0%)</span><div class="prog-track"><span class="prog-fill pr" style="width:1%"></span></div></div></td><td class="red">782</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r1"><td><span class="ds-name">DS 8</span><span class="ds-code">f424_p1</span></td><td><div class="prog-wrap">0/392<span class="prog-pct">(0%)</span><div class="prog-track"><span class="prog-fill pr" style="width:1%"></span></div></div></td><td class="red">392</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r0"><td><span class="ds-name">DS 9</span><span class="ds-code">fa52_p4</span></td><td><div class="prog-wrap">0/392<span class="prog-pct">(0%)</span><div class="prog-track"><span class="prog-fill pr" style="width:1%"></span></div></div></td><td class="red">392</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r1"><td><span class="ds-name">DS 10</span><span class="ds-code">f424_p2</span></td><td><div class="prog-wrap">0/392<span class="prog-pct">(0%)</span><div class="prog-track"><span class="prog-fill pr" style="width:1%"></span></div></div></td><td class="red">392</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r0"><td><span class="ds-name">DS 11</span><span class="ds-code">f423_p1</span></td><td><div class="prog-wrap">0/1,596<span class="prog-pct">(0%)</span><div class="prog-track"><span class="prog-fill pr" style="width:1%"></span></div></div></td><td class="red">1,596</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r1"><td><span class="ds-name">DS 12</span><span class="ds-code">fa22_p1</span></td><td><div class="prog-wrap">0/3,464<span class="prog-pct">(0%)</span><div class="prog-track"><span class="prog-fill pr" style="width:1%"></span></div></div></td><td class="red">3,464</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r0"><td><span class="ds-name">DS 13</span><span class="ds-code">fa22_p2</span></td><td><div class="prog-wrap">0/3,464<span class="prog-pct">(0%)</span><div class="prog-track"><span class="prog-fill pr" style="width:1%"></span></div></div></td><td class="red">3,464</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r1"><td><span class="ds-name">DS 14</span><span class="ds-code">fa22_p3</span></td><td><div class="prog-wrap">0/296<span class="prog-pct">(0%)</span><div class="prog-track"><span class="prog-fill pr" style="width:1%"></span></div></div></td><td class="red">296</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="total-slim"><td style="text-align:left;">Overall total</td><td class="ta">5,621/24,545 t (23%)</td><td class="ta">18,924 t</td><td colspan="6"></td></tr>
+      </tbody></table>
+      <div class="footer">10/04/2026 · Overview</div>
+    </div>
+  </div>
+  <div class="section" id="viwan-dt">
+    <div class="card">
+      <div class="hdr"><span class="hdr-title">Viwan — Quarry: Siqueira / Conquista <span class="hdr-tag">Field Detail</span></span><span class="hdr-ref">Ref: Mar-Apr/2025</span></div>
+      <div class="metrics">
+        <div class="metric"><div class="mlabel">Total area</div><div class="mval blue">—</div></div>
+        <div class="metric"><div class="mlabel">Required volume</div><div class="mval blue">24,545 t</div></div>
+        <div class="metric"><div class="mlabel">Loaded volume</div><div class="mval amber">5,621 t</div></div>
+        <div class="metric"><div class="mlabel">Remaining</div><div class="mval red">18,924 t</div></div>
+      </div>
+      <div class="sort-note">Sorted by Freight end date (ascending) — To be defined shown last</div>
+      <table><thead><tr>
+        <th style="width:20%">Field</th><th style="width:6%">Area</th><th style="width:14%">Loaded / Req. (t)</th>
+        <th style="width:7%">Req. (t)</th><th style="width:8%">Fr. start</th><th style="width:8%">Fr. end</th>
+        <th style="width:8%">Status</th><th style="width:7%">Planting</th><th style="width:8%">Spr. start</th><th style="width:8%">Spr. end</th><th style="width:8%">Status</th>
+      </tr></thead><tbody>
+        <tr class="ds-row"><td colspan="11">DS 1 — f426_p1 · 24/Mar &nbsp;<span style="font-weight:400;color:#10b981;">1,404/1,424 t · 99% · Done</span> &nbsp;<span style="font-weight:400;color:#f59e0b;">Spreading: In progress</span></td></tr>
+        <tr class="r0"><td class="fname">Field 1</td><td>51.79</td><td><div class="prog-wrap">1,404/1,424<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:99%"></span></div></div></td><td class="gray">0</td><td>23/Mar</td><td>24/Mar</td><td><span class="badge done">Done</span></td><td>—</td><td>28/Mar</td><td>—</td><td><span class="badge inp">In progress</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 2 — f426_p2 · 26/Mar &nbsp;<span style="font-weight:400;color:#10b981;">1,404/1,424 t · 99% · Done</span> &nbsp;<span style="font-weight:400;color:#ef4444;">Spreading: To be defined</span></td></tr>
+        <tr class="r0"><td class="fname">Field 1</td><td>51.79</td><td><div class="prog-wrap">1,404/1,424<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:99%"></span></div></div></td><td class="gray">0</td><td>23/Mar</td><td>26/Mar</td><td><span class="badge done">Done</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 3 — f426_p3 · 27/Mar &nbsp;<span style="font-weight:400;color:#10b981;">1,396/1,424 t · 98% · Done</span> &nbsp;<span style="font-weight:400;color:#ef4444;">Spreading: To be defined</span></td></tr>
+        <tr class="r0"><td class="fname">Field 1</td><td>51.79</td><td><div class="prog-wrap">1,396/1,424<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:98%"></span></div></div></td><td class="gray">0</td><td>26/Mar</td><td>27/Mar</td><td><span class="badge done">Done</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 4 — f426_p4 · 30/Mar &nbsp;<span style="font-weight:400;color:#10b981;">1,417/1,424 t · 100% · Done</span> &nbsp;<span style="font-weight:400;color:#ef4444;">Spreading: To be defined</span></td></tr>
+        <tr class="r0"><td class="fname">Field 1</td><td>51.79</td><td><div class="prog-wrap">1,417/1,424<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>27/Mar</td><td>30/Mar</td><td><span class="badge done">Done</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 5 — fa52_p1 · — &nbsp;<span style="font-weight:400;color:#ef4444;">55/782 t · 7% · To be defined</span></td></tr>
+        <tr class="r0"><td class="fname">Field 2</td><td>28.45</td><td><div class="prog-wrap">55/782<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:7%"></span></div></div></td><td class="red">727</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 6 — fa52_p2 · — &nbsp;<span style="font-weight:400;color:#ef4444;">0/7,689 t · 0% · To be defined</span></td></tr>
+        <tr class="r0"><td class="fname">Pivo1</td><td>279.61</td><td><div class="prog-wrap">0/7,689<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:1%"></span></div></div></td><td class="red">7,689</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 7 — fa52_p3 · — &nbsp;<span style="font-weight:400;color:#ef4444;">0/782 t · 0% · To be defined</span></td></tr>
+        <tr class="r0"><td class="fname">Field 2</td><td>28.45</td><td><div class="prog-wrap">0/782<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:1%"></span></div></div></td><td class="red">782</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 8 — f424_p1 · — &nbsp;<span style="font-weight:400;color:#ef4444;">0/392 t · 0% · To be defined</span></td></tr>
+        <tr class="r0"><td class="fname">Field 3</td><td>14.25</td><td><div class="prog-wrap">0/392<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:1%"></span></div></div></td><td class="red">392</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 9 — fa52_p4 · — &nbsp;<span style="font-weight:400;color:#ef4444;">0/392 t · 0% · To be defined</span></td></tr>
+        <tr class="r0"><td class="fname">Field 3</td><td>14.25</td><td><div class="prog-wrap">0/392<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:1%"></span></div></div></td><td class="red">392</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 10 — f424_p2 · — &nbsp;<span style="font-weight:400;color:#ef4444;">0/392 t · 0% · To be defined</span></td></tr>
+        <tr class="r0"><td class="fname">Field 3</td><td>14.25</td><td><div class="prog-wrap">0/392<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:1%"></span></div></div></td><td class="red">392</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 11 — f423_p1 · — &nbsp;<span style="font-weight:400;color:#ef4444;">0/1,596 t · 0% · To be defined</span></td></tr>
+        <tr class="r0"><td class="fname">Field 4</td><td>58.03</td><td><div class="prog-wrap">0/1,596<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:1%"></span></div></div></td><td class="red">1,596</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 12 — fa22_p1 · — &nbsp;<span style="font-weight:400;color:#ef4444;">0/3,464 t · 0% · To be defined</span></td></tr>
+        <tr class="r0"><td class="fname">Field 5 e Pivo 2</td><td>125.98</td><td><div class="prog-wrap">0/3,464<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:1%"></span></div></div></td><td class="red">3,464</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 13 — fa22_p2 · — &nbsp;<span style="font-weight:400;color:#ef4444;">0/3,464 t · 0% · To be defined</span></td></tr>
+        <tr class="r0"><td class="fname">Field 5 e Pivo 2</td><td>125.98</td><td><div class="prog-wrap">0/3,464<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:1%"></span></div></div></td><td class="red">3,464</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 14 — fa22_p3 · — &nbsp;<span style="font-weight:400;color:#ef4444;">0/296 t · 0% · To be defined</span></td></tr>
+        <tr class="r0"><td class="fname">Field 6</td><td>10.78</td><td><div class="prog-wrap">0/296<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:1%"></span></div></div></td><td class="red">296</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="total-full"><td colspan="2" style="text-align:left;">Overall total</td><td>5,621/24,545 t</td><td colspan="8" class="red">18,924 t pending</td></tr>
+      </tbody></table>
+      <div class="footer">10/04/2026 · Field Detail</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ AGROTERENAS ═══════════════════════ -->
+<div class="farm-panel" id="farm-agroterenas">
+  <div class="section-tabs">
+    <button class="sec-btn active" onclick="showSection('agroterenas','ov')">Overview</button>
+    <button class="sec-btn" onclick="showSection('agroterenas','dt')">Field Detail</button>
+  </div>
+  <div class="section visible" id="agroterenas-ov">
+    <div class="card">
+      <div class="hdr"><span class="hdr-title">Agroterenas — Quarry: Paraguaçu / Conquista / A definir <span class="hdr-tag">Overview</span></span><span class="hdr-ref">Ref: Apr/2025</span></div>
+      <div class="metrics">
+        <div class="metric"><div class="mlabel">Total area</div><div class="mval blue">—</div></div>
+        <div class="metric"><div class="mlabel">Required volume</div><div class="mval blue">33,452 t</div></div>
+        <div class="metric"><div class="mlabel">Loaded volume</div><div class="mval amber">2,327 t</div></div>
+        <div class="metric"><div class="mlabel">Remaining</div><div class="mval red">31,125 t</div></div>
+      </div>
+      <div class="sort-note">Sorted by Freight end date (ascending) — To be defined shown last</div>
+      <table><thead><tr>
+        <th style="width:18%">Dropsite</th><th style="width:22%">Loaded / Required (t)</th><th style="width:9%">Remaining</th>
+        <th style="width:9%">Freight start</th><th style="width:9%">Freight end</th><th style="width:10%">Status</th>
+        <th style="width:8%">Spr. start</th><th style="width:8%">Spr. end</th><th style="width:10%">Status</th>
+      </tr></thead><tbody>
+        <!-- Done: DS17 10/Abr -->
+        <tr class="r0"><td><span class="ds-name">DS 17</span><span class="ds-code">f333_p1</span></td><td><div class="prog-wrap">1,590/1,590<span class="prog-pct">(100%)</span><div class="prog-track"><span class="prog-fill pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>07/Abr</td><td>10/Abr</td><td><span class="badge done">Done</span></td><td>18/Abr</td><td>18/Abr</td><td><span class="badge inp">In progress</span></td></tr>
+        <!-- In progress by date -->
+        <tr class="r1"><td><span class="ds-name">DS 15</span><span class="ds-code">f333_p2</span></td><td><div class="prog-wrap">742/1,590<span class="prog-pct">(47%)</span><div class="prog-track"><span class="prog-fill pa" style="width:47%"></span></div></div></td><td class="red">848</td><td>10/Abr</td><td>11/Abr</td><td><span class="badge inp">In progress</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r0"><td><span class="ds-name">DS 16</span><span class="ds-code">f333_p3</span></td><td><div class="prog-wrap">0/1,590<span class="prog-pct">(0%)</span><div class="prog-track"><span class="prog-fill pr" style="width:1%"></span></div></div></td><td class="red">1,590</td><td>11/Abr</td><td>13/Abr</td><td><span class="badge inp">In progress</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r1"><td><span class="ds-name">DS 11</span><span class="ds-code">f334_p1</span></td><td><div class="prog-wrap">0/1,405<span class="prog-pct">(0%)</span><div class="prog-track"><span class="prog-fill pr" style="width:1%"></span></div></div></td><td class="red">1,405</td><td>14/Abr</td><td>15/Abr</td><td><span class="badge inp">In progress</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r0"><td><span class="ds-name">DS 12</span><span class="ds-code">f334_p2</span></td><td><div class="prog-wrap">0/1,405<span class="prog-pct">(0%)</span><div class="prog-track"><span class="prog-fill pr" style="width:1%"></span></div></div></td><td class="red">1,405</td><td>15/Abr</td><td>16/Abr</td><td><span class="badge inp">In progress</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r1"><td><span class="ds-name">DS 13</span><span class="ds-code">f334_p3</span></td><td><div class="prog-wrap">0/1,405<span class="prog-pct">(0%)</span><div class="prog-track"><span class="prog-fill pr" style="width:1%"></span></div></div></td><td class="red">1,405</td><td>16/Abr</td><td>17/Abr</td><td><span class="badge inp">In progress</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r0"><td><span class="ds-name">DS 14</span><span class="ds-code">f334_p4</span></td><td><div class="prog-wrap">0/1,405<span class="prog-pct">(0%)</span><div class="prog-track"><span class="prog-fill pr" style="width:1%"></span></div></div></td><td class="red">1,405</td><td>17/Abr</td><td>18/Abr</td><td><span class="badge inp">In progress</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <!-- TBD -->
+        <tr class="r1"><td><span class="ds-name">DS 1</span><span class="ds-code">f328_p1</span></td><td><div class="prog-wrap">0/1,425<span class="prog-pct">(0%)</span><div class="prog-track"><span class="prog-fill pr" style="width:1%"></span></div></div></td><td class="red">1,425</td><td>20/Abr</td><td>20/Abr</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r0"><td><span class="ds-name">DS 2</span><span class="ds-code">f328_p2</span></td><td><div class="prog-wrap">0/1,425<span class="prog-pct">(0%)</span><div class="prog-track"><span class="prog-fill pr" style="width:1%"></span></div></div></td><td class="red">1,425</td><td>21/Abr</td><td>21/Abr</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r1"><td><span class="ds-name">DS 3</span><span class="ds-code">f328_p3</span></td><td><div class="prog-wrap">0/1,425<span class="prog-pct">(0%)</span><div class="prog-track"><span class="prog-fill pr" style="width:1%"></span></div></div></td><td class="red">1,425</td><td>22/Abr</td><td>22/Abr</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r0"><td><span class="ds-name">DS 4</span><span class="ds-code">f337_p1</span></td><td><div class="prog-wrap">0/2,257<span class="prog-pct">(0%)</span><div class="prog-track"><span class="prog-fill pr" style="width:1%"></span></div></div></td><td class="red">2,257</td><td>23/Abr</td><td>23/Abr</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r1"><td><span class="ds-name">DS 9</span><span class="ds-code">f324_p1</span></td><td><div class="prog-wrap">0/1,704<span class="prog-pct">(0%)</span><div class="prog-track"><span class="prog-fill pr" style="width:1%"></span></div></div></td><td class="red">1,704</td><td>24/Abr</td><td>24/Abr</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r0"><td><span class="ds-name">DS 10</span><span class="ds-code">f324_p2</span></td><td><div class="prog-wrap">0/1,704<span class="prog-pct">(0%)</span><div class="prog-track"><span class="prog-fill pr" style="width:1%"></span></div></div></td><td class="red">1,704</td><td>25/Abr</td><td>25/Abr</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r1"><td><span class="ds-name">DS 5</span><span class="ds-code">f323_p1</span></td><td><div class="prog-wrap">0/1,511<span class="prog-pct">(0%)</span><div class="prog-track"><span class="prog-fill pr" style="width:1%"></span></div></div></td><td class="red">1,511</td><td>27/Abr</td><td>28/Abr</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r0"><td><span class="ds-name">DS 6</span><span class="ds-code">f323_p2</span></td><td><div class="prog-wrap">0/1,511<span class="prog-pct">(0%)</span><div class="prog-track"><span class="prog-fill pr" style="width:1%"></span></div></div></td><td class="red">1,511</td><td>29/Abr</td><td>30/Abr</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r1"><td><span class="ds-name">DS 7</span><span class="ds-code">f336_p1</span></td><td><div class="prog-wrap">0/3,537<span class="prog-pct">(0%)</span><div class="prog-track"><span class="prog-fill pr" style="width:1%"></span></div></div></td><td class="red">3,537</td><td>04/Mai</td><td>05/Mai</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="r0"><td><span class="ds-name">DS 8</span><span class="ds-code">f336_p2</span></td><td><div class="prog-wrap">0/3,537<span class="prog-pct">(0%)</span><div class="prog-track"><span class="prog-fill pr" style="width:1%"></span></div></div></td><td class="red">3,537</td><td>06/Mai</td><td>07/Mai</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="total-slim"><td style="text-align:left;">Overall total</td><td class="ta">2,327/33,452 t (7%)</td><td class="ta">31,125 t</td><td colspan="6"></td></tr>
+      </tbody></table>
+      <div class="footer">10/04/2026 · Overview</div>
+    </div>
+  </div>
+  <div class="section" id="agroterenas-dt">
+    <div class="card">
+      <div class="hdr"><span class="hdr-title">Agroterenas — Quarry: Paraguaçu / Conquista / A definir <span class="hdr-tag">Field Detail</span></span><span class="hdr-ref">Ref: Apr/2025</span></div>
+      <div class="metrics">
+        <div class="metric"><div class="mlabel">Total area</div><div class="mval blue">—</div></div>
+        <div class="metric"><div class="mlabel">Required volume</div><div class="mval blue">33,452 t</div></div>
+        <div class="metric"><div class="mlabel">Loaded volume</div><div class="mval amber">2,327 t</div></div>
+        <div class="metric"><div class="mlabel">Remaining</div><div class="mval red">31,125 t</div></div>
+      </div>
+      <div class="sort-note">Sorted by Freight end date (ascending) — To be defined shown last</div>
+      <table><thead><tr>
+        <th style="width:20%">Field</th><th style="width:6%">Area</th><th style="width:14%">Loaded / Req. (t)</th>
+        <th style="width:7%">Req. (t)</th><th style="width:8%">Fr. start</th><th style="width:8%">Fr. end</th>
+        <th style="width:8%">Status</th><th style="width:7%">Planting</th><th style="width:8%">Spr. start</th><th style="width:8%">Spr. end</th><th style="width:8%">Status</th>
+      </tr></thead><tbody>
+        <!-- DS17 Done -->
+        <tr class="ds-row"><td colspan="11">DS 17 — f333_p1 · 10/Abr &nbsp;<span style="font-weight:400;color:#10b981;">1,590/1,590 t · 100% · Done</span> &nbsp;<span style="font-weight:400;color:#f59e0b;">Spreading: In progress</span></td></tr>
+        <tr class="r0"><td class="fname">—</td><td>57.8</td><td><div class="prog-wrap">1,590/1,590<div class="prog-track-sm"><span class="prog-fill-sm pg" style="width:100%"></span></div></div></td><td class="gray">0</td><td>07/Abr</td><td>10/Abr</td><td><span class="badge done">Done</span></td><td>—</td><td>18/Abr</td><td>18/Abr</td><td><span class="badge inp">In progress</span></td></tr>
+        <!-- DS15 In progress -->
+        <tr class="ds-row"><td colspan="11">DS 15 — f333_p2 · 11/Abr &nbsp;<span style="font-weight:400;color:#f59e0b;">742/1,590 t · 47% · In progress</span></td></tr>
+        <tr class="r0"><td class="fname">—</td><td>57.8</td><td><div class="prog-wrap">742/1,590<div class="prog-track-sm"><span class="prog-fill-sm pa" style="width:47%"></span></div></div></td><td class="red">848</td><td>10/Abr</td><td>11/Abr</td><td><span class="badge inp">In progress</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 16 — f333_p3 · 13/Abr &nbsp;<span style="font-weight:400;color:#ef4444;">0/1,590 t · 0% · In progress</span></td></tr>
+        <tr class="r0"><td class="fname">—</td><td>57.8</td><td><div class="prog-wrap">0/1,590<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:1%"></span></div></div></td><td class="red">1,590</td><td>11/Abr</td><td>13/Abr</td><td><span class="badge inp">In progress</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 11 — f334_p1 · 15/Abr &nbsp;<span style="font-weight:400;color:#ef4444;">0/1,405 t · 0% · In progress</span></td></tr>
+        <tr class="r0"><td class="fname">—</td><td>51.1</td><td><div class="prog-wrap">0/1,405<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:1%"></span></div></div></td><td class="red">1,405</td><td>14/Abr</td><td>15/Abr</td><td><span class="badge inp">In progress</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 12 — f334_p2 · 16/Abr &nbsp;<span style="font-weight:400;color:#ef4444;">0/1,405 t · 0% · In progress</span></td></tr>
+        <tr class="r0"><td class="fname">—</td><td>51.1</td><td><div class="prog-wrap">0/1,405<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:1%"></span></div></div></td><td class="red">1,405</td><td>15/Abr</td><td>16/Abr</td><td><span class="badge inp">In progress</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 13 — f334_p3 · 17/Abr &nbsp;<span style="font-weight:400;color:#ef4444;">0/1,405 t · 0% · In progress</span></td></tr>
+        <tr class="r0"><td class="fname">—</td><td>51.1</td><td><div class="prog-wrap">0/1,405<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:1%"></span></div></div></td><td class="red">1,405</td><td>16/Abr</td><td>17/Abr</td><td><span class="badge inp">In progress</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 14 — f334_p4 · 18/Abr &nbsp;<span style="font-weight:400;color:#ef4444;">0/1,405 t · 0% · In progress</span></td></tr>
+        <tr class="r0"><td class="fname">—</td><td>51.1</td><td><div class="prog-wrap">0/1,405<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:1%"></span></div></div></td><td class="red">1,405</td><td>17/Abr</td><td>18/Abr</td><td><span class="badge inp">In progress</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <!-- TBD with dates -->
+        <tr class="ds-row"><td colspan="11">DS 1 — f328_p1 · 20/Abr &nbsp;<span style="font-weight:400;color:#ef4444;">0/1,425 t · 0% · To be defined</span></td></tr>
+        <tr class="r0"><td class="fname">—</td><td>51.8</td><td><div class="prog-wrap">0/1,425<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:1%"></span></div></div></td><td class="red">1,425</td><td>20/Abr</td><td>20/Abr</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 2 — f328_p2 · 21/Abr &nbsp;<span style="font-weight:400;color:#ef4444;">0/1,425 t · 0% · To be defined</span></td></tr>
+        <tr class="r0"><td class="fname">—</td><td>51.8</td><td><div class="prog-wrap">0/1,425<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:1%"></span></div></div></td><td class="red">1,425</td><td>21/Abr</td><td>21/Abr</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 3 — f328_p3 · 22/Abr &nbsp;<span style="font-weight:400;color:#ef4444;">0/1,425 t · 0% · To be defined</span></td></tr>
+        <tr class="r0"><td class="fname">—</td><td>51.8</td><td><div class="prog-wrap">0/1,425<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:1%"></span></div></div></td><td class="red">1,425</td><td>22/Abr</td><td>22/Abr</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 4 — f337_p1 · 23/Abr &nbsp;<span style="font-weight:400;color:#ef4444;">0/2,257 t · 0% · To be defined</span></td></tr>
+        <tr class="r0"><td class="fname">—</td><td>82.1</td><td><div class="prog-wrap">0/2,257<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:1%"></span></div></div></td><td class="red">2,257</td><td>23/Abr</td><td>23/Abr</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 9 — f324_p1 · 24/Abr &nbsp;<span style="font-weight:400;color:#ef4444;">0/1,704 t · 0% · To be defined</span></td></tr>
+        <tr class="r0"><td class="fname">—</td><td>62.0</td><td><div class="prog-wrap">0/1,704<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:1%"></span></div></div></td><td class="red">1,704</td><td>24/Abr</td><td>24/Abr</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 10 — f324_p2 · 25/Abr &nbsp;<span style="font-weight:400;color:#ef4444;">0/1,704 t · 0% · To be defined</span></td></tr>
+        <tr class="r0"><td class="fname">—</td><td>62.0</td><td><div class="prog-wrap">0/1,704<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:1%"></span></div></div></td><td class="red">1,704</td><td>25/Abr</td><td>25/Abr</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 5 — f323_p1 · 28/Abr &nbsp;<span style="font-weight:400;color:#ef4444;">0/1,511 t · 0% · To be defined</span></td></tr>
+        <tr class="r0"><td class="fname">—</td><td>55.0</td><td><div class="prog-wrap">0/1,511<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:1%"></span></div></div></td><td class="red">1,511</td><td>27/Abr</td><td>28/Abr</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 6 — f323_p2 · 30/Abr &nbsp;<span style="font-weight:400;color:#ef4444;">0/1,511 t · 0% · To be defined</span></td></tr>
+        <tr class="r0"><td class="fname">—</td><td>55.0</td><td><div class="prog-wrap">0/1,511<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:1%"></span></div></div></td><td class="red">1,511</td><td>29/Abr</td><td>30/Abr</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 7 — f336_p1 · 05/Mai &nbsp;<span style="font-weight:400;color:#ef4444;">0/3,537 t · 0% · To be defined</span></td></tr>
+        <tr class="r0"><td class="fname">—</td><td>128.6</td><td><div class="prog-wrap">0/3,537<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:1%"></span></div></div></td><td class="red">3,537</td><td>04/Mai</td><td>05/Mai</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="ds-row"><td colspan="11">DS 8 — f336_p2 · 07/Mai &nbsp;<span style="font-weight:400;color:#ef4444;">0/3,537 t · 0% · To be defined</span></td></tr>
+        <tr class="r0"><td class="fname">—</td><td>128.6</td><td><div class="prog-wrap">0/3,537<div class="prog-track-sm"><span class="prog-fill-sm pr" style="width:1%"></span></div></div></td><td class="red">3,537</td><td>06/Mai</td><td>07/Mai</td><td><span class="badge tbd">To be defined</span></td><td>—</td><td>—</td><td>—</td><td><span class="badge tbd">To be defined</span></td></tr>
+        <tr class="total-full"><td colspan="2" style="text-align:left;">Overall total</td><td>2,327/33,452 t</td><td colspan="8" class="red">31,125 t pending</td></tr>
+      </tbody></table>
+      <div class="footer">10/04/2026 · Field Detail</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showFarm(farm) {
+  document.querySelectorAll('.farm-panel').forEach(p => p.classList.remove('visible'));
+  document.querySelectorAll('.farm-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('farm-' + farm).classList.add('visible');
+  event.target.classList.add('active');
+}
+function showSection(farm, sec) {
+  const panel = document.getElementById('farm-' + farm);
+  panel.querySelectorAll('.section').forEach(s => s.classList.remove('visible'));
+  panel.querySelectorAll('.sec-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(farm + '-' + sec).classList.add('visible');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
